@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ManualBotJob;
 use App\Models\ManualBotHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
@@ -227,11 +229,17 @@ class ManualBotHistoryController extends Controller
 {
     //
 
-    public function infoRun(Request $request)
+    public function infoRun(Request $request, string $id)
     {
+        $userData = Auth::user();
 
+        $manualBotHistory = $userData->manualBotHistories()->where("id", $id)->first();
+
+        return response()->json([
+            "status" => "success",
+            "data" => $manualBotHistory,
+        ]);
     }
-
 
     public function run(Request $request)
     {
@@ -244,239 +252,77 @@ class ManualBotHistoryController extends Controller
 
         $histories = $userData->manualBotHistories()->where('status', 'running')->first();
 
-        if ($histories != null) {
-            return response()->json([
-                "status" => "failed",
-                "message" => "there is a bot running"
-            ]);
-        }
+        // if ($histories != null) {
+        //     return response()->json([
+        //         "status" => "failed",
+        //         "message" => "there is a bot running"
+        //     ]);
+        // }
 
 
-
-        // if()
-        return response()->json([
-            "user" => $histories,
+        $botHistory = ManualBotHistory::create([
+            "bot_auto_follow" => $bot_auto_follow,
+            "bot_auto_like" => $bot_auto_like,
+            "bot_auto_comment" => $bot_auto_comment,
+            "bot_auto_seen_like" => $bot_auto_seen_like,
+            "input_target" => $request->input('input_target'),
+            "status" => "running",
+            "start_time" => Carbon::now(),
+            "delay" => "3",
+            "user_id" => $userData->id,
         ]);
 
-        $z = "";
-        $getakun = "";
+        $botHistory->save();
 
-        $target = "pantjoranpik";
-        $komen = "tesss";
-        $ip = 0;
-        $userprox = 0;
-        $is_sock5 = 0;
+        $target = $request->input("input_target");
+        $comment = $request->input("input_comment");
 
-        $message = "";
-
-        $zx = "";
-
-        // $botHistory = ManualBotHistory::create([
-        //     "bot_auto_follow" => $bot_auto_follow,
-        //     "bot_auto_like" => $bot_auto_like,
-        //     "bot_auto_comment" => $bot_auto_comment,
-        //     "bot_auto_seen_like" => $bot_auto_seen_like,
-        //     "input_target" => $request->input('input_target'),
-        //     "status" => "running",
-        //     "delay" => "3",
-        //     "user_id" => $userData->id,
-        // ]);
-
-        // $botHistory->save();
+        ManualBotJob::dispatch($botHistory->id, $userData, $target, $comment);
 
 
-
-        // if ($userData->cookie_data) {
-        //     $cookie = $userData->cookie_data;
-        //     $useragent = $userData->user_agent;
-        //     $getakun = proccess(1, $useragent, 'accounts/current_user/', $cookie);
-        //     $getakun = json_decode($getakun[1], true);
-
-        //     if ($getakun['status'] == 'ok') {
-        //         $getakunV2 = proccess(1, $useragent, 'users/' . $getakun['user']['pk'] . '/info', $cookie);
-        //         $getakunV2 = json_decode($getakunV2[1], true);
-        //         $z = "[~] Login as @" . $getakun['user']['username'] . " \n";
-        //         // echo "[~] [Media : " . $getakunV2['user']['media_count'] . "] [Follower : " . $getakunV2['user']['follower_count'] . "] [Following : " . $getakunV2['user']['following_count'] . "]\n";
-        //         // echo "[~] Please wait 5 second for loading script\n";
-        //         // echo "[~] ";
-        //     }
-
-        //     if ($bot_auto_follow) {
-        //         // $message = followTarget("kelakarindonesia", $useragent, $cookie, $ip, $userprox, $is_sock5);
-
-        //     }
-
-        //     if ($bot_auto_like) {
-
-        //     }
-
-        //     if ($bot_auto_comment) {
-        //         // $zx = commentLatestPosts("kelakarindonesia", $cookie, $useragent, $ip, $userprox, $is_sock5);
-        //     }
-
-
-        //     if ($bot_auto_seen_like) {
-
-        //     }
-
-
-
-        //     // get folower of target
-        //     $targetid = json_decode(request(1, $useragent, 'users/' . $target . '/usernameinfo/', $cookie, 0, array(), $ip, 0, $is_sock5)[1], true);
-
-        //     if ($targetid["status"] == "fail") {
-        //         return response()->json(['message' => "Please try again later or login", 'status' => "fail"], 500);
-        //     } else {
-        //         $gettarget = proccess(1, $useragent, 'users/' . $targetid . '/info', $cookie, 0, array(), $ip, 0, $is_sock5);
-        //         $gettarget = json_decode($gettarget[1], true);
-
-        //         $counttargertfix = rand(25, 45);
-        //         $jumlah = $counttargertfix;
-        //         if (!is_numeric($jumlah)) {
-        //             $limit = 1;
-        //         } elseif ($jumlah > ($gettarget['user']['follower_count'] - 1)) {
-        //             $limit = $gettarget['user']['follower_count'] - 1;
-        //         } else {
-        //             $limit = $jumlah - 1;
-        //         }
-        //         $next = false;
-        //         $next_id = 0;
-        //         $listids = array();
-        //         do {
-        //             if ($next == true) {
-        //                 $parameters = '?max_id=' . $next_id . '';
-        //             } else {
-        //                 $parameters = '';
-        //             }
-        //             $req = proccess(1, $useragent, 'friendships/' . $targetid . '/followers/' . $parameters, $cookie, 0, array(), $ip, $userprox, $is_sock5);
-        //             $req = json_decode($req[1], true);
-        //             if ($req['status'] !== 'ok') {
-        //                 var_dump($req);
-        //                 exit();
-        //             }
-        //             shuffle($req['users']);
-        //             foreach ($req['users'] as $user) {
-        //                 if (!$user['is_private'] && $user['latest_reel_media']) {
-        //                     if (count($listids) <= $limit) {
-        //                         $listids[] = $user['pk'];
-        //                     } else {
-        //                         break;
-        //                     }
-        //                 }
-        //             }
-        //             if ($req['next_max_id']) {
-        //                 $next = true;
-        //                 $next_id = $req['next_max_id'];
-        //             } else {
-        //                 $next = false;
-        //                 $next_id = '0';
-        //             }
-        //         } while (count($listids) <= $limit);
-        //     }
-
-
-        // for ($i = 0; $i < count($listids); $i++) {
-        //     $username = array();
-        //     $username[$i] = findUsernameById($req['users'], $listids[$i]);
-        //     $i++;
-        //     // saveData('./data/datafollowers.txt', $i . " https://instagram.com/" . $username[$i] . " DataScape from " . $target . " collected");
-        // }
-
-        // for ($i = 0; $i < count($listids); $i++):
-        //     $getstory = proccess(1, $useragent, 'feed/user/' . $listids[$i] . '/story/', $cookie, 0, array(), $ip, $userprox, $is_sock5);
-        //     $getstory = json_decode($getstory[1], true);
-        //     foreach ($getstory['reel']['items'] as $storyitem):
-        //         $reels[count($reels)] = $storyitem['id'] . "_" . $getstory['reel']['user']['pk'];
-        //         $stories['id'] = $storyitem['id'];
-        //         $stories['reels'] = $storyitem['id'] . "_" . $getstory['reel']['user']['pk'];
-        //         $stories['reel'] = $storyitem['taken_at'] . '_' . time();
-        //         // if (strpos(file_get_contents('./data/storyData.txt'), $stories['reels']) == false) {
-        //         //     $hook = '{"live_vods_skipped": {}, "nuxes_skipped": {}, "nuxes": {}, "reels": {"' . $stories['reels'] . '": ["' . $stories['reel'] . '"]}, "live_vods": {}, "reel_media_skipped": {}}';
-        //         //     $viewstory = proccess_v2(1, $useragent, 'media/seen/?reel=1&live_vod=0', $cookie, hook('' . $hook . ''), array(), $ip, $user, $is_sock5);
-        //         //     $viewstory = json_decode($viewstory[1], true);
-        //         //     if ($storyitem['story_polls']) {
-        //         //         $stories['pool_id'] = $storyitem['story_polls'][0]['poll_sticker']['poll_id'];
-        //         //         $react_1 = proccess(1, $useragent, 'media/' . $stories['id'] . '/' . $stories['pool_id'] . '/story_poll_vote/', $cookie, hook('{"radio_type": "none", "vote": "' . rand(0, 1) . '"}'), array(), $ip, $user, $is_sock5);
-        //         //         $react_1 = json_decode($react_1[1], true);
-        //         //         if ($react_1['status'] == 'ok') {
-        //         //             echo "[~] " . date('d-m-Y H:i:s') . " - Success polling for " . $stories['id'] . "\n";
-        //         //         }
-
-        //         //         if ($storyitem['story_countdowns']) {
-        //         //             $stories['countdown_id'] = $storyitem['story_countdowns'][0]['countdown_sticker']['countdown_id'];
-        //         //             $react_3 = proccess(1, $useragent, 'media/' . $stories['countdown_id'] . '/follow_story_countdown/', $cookie, 0, array(), $prox['ip'], $prox['user'], $prox['is_socks5']);
-        //         //             $react_3 = json_decode($react_3[1], true);
-        //         //         }
-        //         //         if ($storyitem['story_sliders']) {
-        //         //             $stories['slider_id'] = $storyitem['story_sliders'][0]['slider_sticker']['slider_id'];
-        //         //             $react_4 = proccess(1, $useragent, 'media/' . $stories['id'] . '/' . $stories['slider_id'] . '/story_slider_vote/', $cookie, hook('{"radio_type": "wifi-none", "vote": "1"}'), array(), $prox['ip'], $prox['user'], $prox['is_socks5']);
-        //         //             $react_4 = json_decode($react_4[1], true);
-        //         //             if ($react_2['status'] == 'ok') {
-        //         //                 echo "[~] " . date('d-m-Y H:i:s') . " - Success sent slider for " . $stories['id'] . "\n";
-        //         //             }
-        //         //         }
-        //         //         if ($storyitem['story_quizs']) {
-        //         //             $stories['quiz_id'] = $storyitem['story_quizs'][0]['quiz_sticker']['quiz_id'];
-        //         //         }
-        //         //         if ($viewstory['status'] == 'ok') {
-
-        //         //             $sendLike = proccess(1, $useragent, 'story_interactions/send_story_like', $cookie, "media_id=" . $storyitem['pk'], array(), $prox['ip'], $prox['user'], $prox['is_socks5']);
-        //         //             $sendLike = json_decode($sendLike[1], true);
-
-        //         //             if ($sendLike['status'] == 'ok') {
-        //         //                 echo "[~] " . date('d-m-Y H:i:s') . " - Success send like for https://instagram.com/stories/" . $storyitem['user']['username'] . "/" . $storyitem['pk'] . "/\n";
-        //         //                 saveData('./data/storySeen.txt', $storyitem['user']['username']);
-        //         //             } else {
-        //         //                 var_dump($sendLike);
-        //         //                 exit;
-        //         //             }
-
-        //         //             $reels_suc[count($reels_suc)] = $storyitem['id'] . "_" . $getstory['reel']['user']['pk'];
-        //         //             echo "[~] " . date('d-m-Y H:i:s') . " - Seen stories " . $stories['id'] . " \n";
-
-        //         //         }
-        //         //         $new_run++;
-        //         //         $sleepfix1 = rand(25, 45);
-        //         //         sleep($sleepfix);
-        //         //     }
-
-        //     endforeach;
-        //     $sleepfix = rand(25, 45);
-        //     // echo "[~] " . date('d-m-Y H:i:s') . " - Sleep for " . $sleepfix . " second to bypass instagram limit== " . count($reels_suc) . "\n";
-        //     sleep($sleepfix);
-        // endfor;
-        // }
-        // $input_target = $request->input('input_target');
-        // $input_comment = $request->input('input_comment');
-        // $delay = $request->input('delay');
-
-        // $useragent = "1";
-
-        // if ($user->instagram_user == "") {
-        //     return response()->json([
-        //         'status' => 400,
-        //         'message' => 'instagram user empty',
-        //     ], 400);
-        // }
-
-
-
-        // InstagramHelper::processHttpRequest(
-
-        // )
 
         return response()
-            ->json(['message' => $bot_auto_follow]);
+            ->json(['status' => 'success', 'message' => 'bot successfully run', 'bot_id' => $botHistory->id]);
     }
 
-    public function log()
+    public function log(Request $request, string $id)
     {
+        $userData = Auth::user();
 
+        $manualBotHistory = $userData->manualBotHistories()->where("id", $id)->first();
+
+        if ($manualBotHistory->status == "failed") {
+            return response()->json([
+                "status" => "failed",
+                "data" => $manualBotHistory->logs,
+            ]);
+
+        }
+
+        if ($manualBotHistory->status == "stopped") {
+            return response()->json([
+                "status" => "stopped",
+                "data" => $manualBotHistory->logs,
+            ]);
+
+        }
+
+        return response()->json([
+            "status" => "success",
+            "data" => $manualBotHistory->logs()->orderBy("id", "desc")->get(),
+        ]);
     }
 
     public function history(Request $request)
     {
+        $userData = Auth::user();
 
+        $manualBotHistory = $userData->manualBotHistories()->orderBy('updated_at', 'desc')->get();
+
+        return response()->json([
+            "status" => "success",
+            "data" => $manualBotHistory,
+        ]);
     }
 
     public function checkUser()
@@ -525,7 +371,7 @@ class ManualBotHistoryController extends Controller
             $user = User::where("username", $user->username)->firstOrFail();
             return response()->json(["user" => $user, "data" => $cookie]);
         } else {
-            return response()->json(["status" => $ext->status], 500);
+            return response()->json(["status" => $ext->status, "x" => $ext], 500);
         }
 
         // return response()->json(["data" => $cookie]);

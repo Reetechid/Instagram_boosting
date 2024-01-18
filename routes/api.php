@@ -22,11 +22,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::prefix('bot')->middleware("auth:sanctum")->group(function () {
-    Route::get("log", [ManualBotHistoryController::class, "log"]);
+    Route::get("log/{id}", [ManualBotHistoryController::class, "log"]);
     Route::post("run", [ManualBotHistoryController::class, "run"]);
-    Route::get("run/info/{id}", [ManualBotHistoryController::class, ""]);
+    Route::get("run/info/{id}", [ManualBotHistoryController::class, "infoRun"]);
     Route::post("login-insta", [ManualBotHistoryController::class, "loginInsta"]);
     Route::get("check", [ManualBotHistoryController::class, "checkUser"]);
+    Route::get("history", [ManualBotHistoryController::class, "history"]);
 });
 
 Route::prefix('user')->group(function () {
